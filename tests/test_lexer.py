@@ -16,11 +16,17 @@ def types(source: str) -> list[TokenType]:
 
 
 def test_keywords_and_identifiers():
-    source = "int float string if else while identifier _tmp var123 integer while1"
+    source = (
+        "int float string bool if else while true false "
+        "identifier _tmp var123 integer while1"
+    )
 
     tokens = tokenize(source)
 
     assert [token.type for token in tokens[:-1]] == [
+        TokenType.KEYWORD,
+        TokenType.KEYWORD,
+        TokenType.KEYWORD,
         TokenType.KEYWORD,
         TokenType.KEYWORD,
         TokenType.KEYWORD,

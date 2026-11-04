@@ -1,4 +1,8 @@
-"""Immutable abstract syntax tree (AST) node definitions."""
+"""Immutable abstract syntax tree (AST) node definitions.
+
+Expression nodes carry an optional ``type_name`` annotation that the
+semantic analyzer fills in.
+"""
 
 from __future__ import annotations
 
@@ -74,6 +78,7 @@ class BinaryOp:
     right: Expression
     line: int
     column: int
+    type_name: str | None = None
 
 
 @dataclass(frozen=True)
@@ -84,15 +89,17 @@ class UnaryOp:
     operand: Expression
     line: int
     column: int
+    type_name: str | None = None
 
 
 @dataclass(frozen=True)
 class Literal:
-    """An integer, float, or string literal value."""
+    """An integer, float, string, or boolean literal value."""
 
-    value: int | float | str
+    value: int | float | str | bool
     line: int
     column: int
+    type_name: str | None = None
 
 
 @dataclass(frozen=True)
@@ -102,6 +109,7 @@ class Identifier:
     name: str
     line: int
     column: int
+    type_name: str | None = None
 
 
 Statement = Block | VarDecl | Assign | If | While

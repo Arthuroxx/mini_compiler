@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "mini_compiler"
 version = "0.1.0"
-description = "Simulador de compilador para la materia de Compiladores"
+description = "Compiler simulator for the Compilers course"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = []

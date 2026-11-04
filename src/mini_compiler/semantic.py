@@ -1,1 +1,1 @@
-"""Analizador semantico: valida tipos, declaraciones y scopes."""
+"""Semantic analyzer: validates types, declarations, and scopes."""

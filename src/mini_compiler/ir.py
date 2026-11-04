@@ -1,1 +1,1 @@
-"""Representacion intermedia (IR) generada a partir del AST validado."""
+"""Intermediate representation (IR) generated from the validated AST."""

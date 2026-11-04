@@ -1,1 +1,1 @@
-"""Tabla de simbolos para registrar identificadores y sus atributos."""
+"""Symbol table for tracking identifiers and their attributes."""

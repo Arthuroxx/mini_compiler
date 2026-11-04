@@ -1,1 +1,1 @@
-"""Interfaz de linea de comandos para compilar un archivo fuente."""
+"""Command-line interface for compiling a source file."""

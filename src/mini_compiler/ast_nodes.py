@@ -1,1 +1,1 @@
-"""Definiciones de los nodos del arbol de sintaxis abstracta (AST)."""
+"""Abstract syntax tree (AST) node definitions."""

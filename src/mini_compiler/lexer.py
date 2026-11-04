@@ -1,1 +1,1 @@
-"""Analizador lexico: convierte el codigo fuente en una secuencia de tokens."""
+"""Lexer: converts source code into a sequence of tokens."""

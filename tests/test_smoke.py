@@ -1,4 +1,4 @@
-"""Prueba de humo: verifica que los modulos del paquete se importan."""
+"""Smoke test: verifies that the package modules import correctly."""
 
 import mini_compiler
 from mini_compiler import ast_nodes, cli, ir, lexer, parser, semantic, symbols

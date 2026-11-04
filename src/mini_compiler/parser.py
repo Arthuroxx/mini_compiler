@@ -1,1 +1,1 @@
-"""Analizador sintactico: construye el AST a partir de los tokens."""
+"""Parser: builds the AST from the token stream."""

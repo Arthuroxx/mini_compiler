@@ -1,1 +1,1 @@
-"""Mini compilador didactico implementado en Python."""
+"""Didactic mini compiler implemented in Python."""

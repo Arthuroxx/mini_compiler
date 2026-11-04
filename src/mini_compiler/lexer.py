@@ -49,7 +49,7 @@ TOKEN_PATTERN = re.compile(
   | (?P<UNTERMINATED_STRING>"(?:\\.|[^"\\\n])*)
   | (?P<FLOAT>\d+\.\d+)
   | (?P<INT>\d+)
-  | (?P<KEYWORD>\b(?:int|float|string|if|else|while)\b)
+  | (?P<KEYWORD>\b(?:int|float|string|bool|if|else|while|true|false)\b)
   | (?P<ID>[A-Za-z_][A-Za-z0-9_]*)
   | (?P<OPERATOR>==|!=|<=|>=|&&|\|\||[!=+\-*/])
   | (?P<DELIMITER>[(){};])

@@ -10,7 +10,7 @@ program        = { statement } EOF ;
 statement      = block | var_decl | assignment | if_stmt | while_stmt ;
 block          = "{" { statement } "}" ;
 var_decl       = type IDENT "=" expression ";" ;
-type           = "int" | "float" | "string" ;
+type           = "int" | "float" | "string" | "bool" ;
 assignment     = IDENT "=" expression ";" ;
 if_stmt        = "if" "(" expression ")" block [ "else" block ] ;
 while_stmt     = "while" "(" expression ")" block ;
@@ -23,7 +23,8 @@ relational     = additive { ( "<=" | ">=" ) additive } ;
 additive       = multiplicative { ( "+" | "-" ) multiplicative } ;
 multiplicative = unary { ( "*" | "/" ) unary } ;
 unary          = ( "!" | "-" ) unary | primary ;
-primary        = INT | FLOAT | STRING | IDENT | "(" expression ")" ;
+primary        = INT | FLOAT | STRING | "true" | "false" | IDENT
+               | "(" expression ")" ;
 """
 
 from __future__ import annotations
@@ -55,7 +56,7 @@ _ESCAPE_CHARACTERS = {
     '"': '"',
 }
 
-_TYPE_KEYWORDS = frozenset({"int", "float", "string"})
+_TYPE_KEYWORDS = frozenset({"int", "float", "string", "bool"})
 
 
 @dataclass(frozen=True)
@@ -239,6 +240,12 @@ class Parser:
         if self._check(TokenType.STRING):
             self._advance()
             return Literal(_decode_string(token.value), token.line, token.column)
+
+        if self._check(TokenType.KEYWORD, "true") or self._check(
+            TokenType.KEYWORD, "false"
+        ):
+            self._advance()
+            return Literal(token.value == "true", token.line, token.column)
 
         if self._check(TokenType.ID):
             self._advance()

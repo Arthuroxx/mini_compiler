@@ -197,6 +197,16 @@ def test_literal_values_are_converted():
     ]
 
 
+def test_bool_declarations_and_literals():
+    program, errors = parse("bool a = true; bool b = false;")
+
+    assert errors == []
+    assert program.statements == (
+        VarDecl("a", "bool", Literal(True, 1, 10), 1, 1),
+        VarDecl("b", "bool", Literal(False, 1, 25), 1, 16),
+    )
+
+
 def test_reports_missing_identifier_with_position():
     program, errors = parse("int = ;")
 

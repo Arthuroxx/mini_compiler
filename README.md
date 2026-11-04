@@ -1,17 +1,17 @@
 # mini_compiler
 
-Simulador de compilador desarrollado en Python 3.10+ para la materia de Compiladores.
+A compiler simulator built in Python 3.10+ for the Compilers course.
 
-## Estructura
+## Structure
 
-- `src/mini_compiler/`: paquete con los modulos del compilador.
-- `tests/`: pruebas con pytest.
+- `src/mini_compiler/`: package containing the compiler modules.
+- `tests/`: pytest tests.
 
-## Requisitos
+## Requirements
 
-- Python 3.10 o superior.
+- Python 3.10 or higher.
 
-## Instalacion
+## Setup
 
 ```bash
 python -m venv .venv
@@ -19,7 +19,7 @@ python -m venv .venv
 pip install -e ".[dev]"
 ```
 
-## Pruebas
+## Tests
 
 ```bash
 pytest

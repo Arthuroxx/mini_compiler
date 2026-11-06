@@ -3,7 +3,7 @@
 from mini_compiler.symbols import SemanticError, Symbol, SymbolTable
 
 
-def test_global_scope_definition_and_lookup():
+def test_global_scope_definition_and_lookup() -> None:
     table = SymbolTable()
 
     symbol = table.define("x", "int", 1, 1)
@@ -14,7 +14,7 @@ def test_global_scope_definition_and_lookup():
     assert table.errors == []
 
 
-def test_function_scope_links_to_global():
+def test_function_scope_links_to_global() -> None:
     table = SymbolTable()
     global_scope = table.current_scope
 
@@ -23,12 +23,13 @@ def test_function_scope_links_to_global():
 
     assert function_scope.enclosing_scope is global_scope
     assert table.current_scope is function_scope
+    assert symbol is not None
     assert symbol.scope_name == "function"
     assert table.lookup("param", 2, 5) == symbol
     assert table.errors == []
 
 
-def test_lookup_walks_from_nested_block_to_global():
+def test_lookup_walks_from_nested_block_to_global() -> None:
     table = SymbolTable()
     table.define("global_var", "int", 1, 1)
     table.enter_scope("function")
@@ -37,18 +38,23 @@ def test_lookup_walks_from_nested_block_to_global():
     local = table.define("tmp", "string", 3, 9)
 
     assert table.lookup("tmp", 4, 1) == local
-    assert table.lookup("param", 4, 5).type_name == "float"
-    assert table.lookup("global_var", 4, 9).type_name == "int"
+    param = table.lookup("param", 4, 5)
+    global_var = table.lookup("global_var", 4, 9)
+    assert param is not None
+    assert global_var is not None
+    assert param.type_name == "float"
+    assert global_var.type_name == "int"
     assert table.errors == []
 
 
-def test_variable_is_inaccessible_after_leaving_its_block():
+def test_variable_is_inaccessible_after_leaving_its_block() -> None:
     table = SymbolTable()
     table.enter_scope("block")
     table.define("tmp", "int", 1, 5)
 
     popped = table.exit_scope()
 
+    assert popped is not None
     assert popped.name == "block"
     assert table.current_scope.name == "global"
     assert table.lookup("tmp", 3, 7) is None
@@ -57,7 +63,7 @@ def test_variable_is_inaccessible_after_leaving_its_block():
     ]
 
 
-def test_redeclaration_in_the_same_scope_reports_an_error():
+def test_redeclaration_in_the_same_scope_reports_an_error() -> None:
     table = SymbolTable()
     table.define("x", "int", 1, 1)
 
@@ -72,26 +78,31 @@ def test_redeclaration_in_the_same_scope_reports_an_error():
         )
     ]
     assert len(table.current_scope.symbols) == 1
-    assert table.lookup("x", 3, 1).type_name == "int"
+    symbol = table.lookup("x", 3, 1)
+    assert symbol is not None
+    assert symbol.type_name == "int"
 
 
-def test_shadowing_in_a_nested_scope_is_allowed():
+def test_shadowing_in_a_nested_scope_is_allowed() -> None:
     table = SymbolTable()
     table.define("x", "int", 1, 1)
     table.enter_scope("block")
 
     local = table.define("x", "float", 2, 5)
 
+    assert local is not None
     assert local.type_name == "float"
     assert table.lookup("x", 3, 1) == local
     assert table.errors == []
 
     table.exit_scope()
-    assert table.lookup("x", 4, 1).type_name == "int"
+    outer = table.lookup("x", 4, 1)
+    assert outer is not None
+    assert outer.type_name == "int"
     assert table.errors == []
 
 
-def test_dump_is_readable_and_keeps_scope_hierarchy():
+def test_dump_is_readable_and_keeps_scope_hierarchy() -> None:
     table = SymbolTable()
     table.define("x", "int", 1, 1)
     table.enter_scope("function")
@@ -109,11 +120,11 @@ def test_dump_is_readable_and_keeps_scope_hierarchy():
     )
 
 
-def test_dump_of_empty_global_scope():
+def test_dump_of_empty_global_scope() -> None:
     assert SymbolTable().dump() == "global:\n  <empty>"
 
 
-def test_global_scope_cannot_be_exited():
+def test_global_scope_cannot_be_exited() -> None:
     table = SymbolTable()
 
     assert table.exit_scope() is None

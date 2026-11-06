@@ -15,7 +15,7 @@ def types(source: str) -> list[TokenType]:
     return [token.type for token in tokenize(source)]
 
 
-def test_keywords_and_identifiers():
+def test_keywords_and_identifiers() -> None:
     source = (
         "int float string bool if else while true false "
         "identifier _tmp var123 integer while1"
@@ -42,7 +42,7 @@ def test_keywords_and_identifiers():
     assert [token.value for token in tokens[:-1]] == source.split()
 
 
-def test_float_is_recognized_before_int():
+def test_float_is_recognized_before_int() -> None:
     assert types("3.14 42 0.5 7") == [
         TokenType.FLOAT,
         TokenType.INT,
@@ -52,7 +52,7 @@ def test_float_is_recognized_before_int():
     ]
 
 
-def test_strings_keep_their_quotes():
+def test_strings_keep_their_quotes() -> None:
     tokens = tokenize('"hello world" ""')
 
     assert [token.type for token in tokens] == [
@@ -63,7 +63,7 @@ def test_strings_keep_their_quotes():
     assert [token.value for token in tokens[:-1]] == ['"hello world"', '""']
 
 
-def test_operators_and_delimiters():
+def test_operators_and_delimiters() -> None:
     source = "== != <= >= && || ! = + - * / ( ) { } ;"
 
     tokens = tokenize(source)
@@ -91,7 +91,7 @@ def test_operators_and_delimiters():
     ]
 
 
-def test_comments_are_ignored_and_positions_are_tracked():
+def test_comments_are_ignored_and_positions_are_tracked() -> None:
     source = (
         "int a = 1; // line comment\n"
         "/* block\n"
@@ -118,7 +118,7 @@ def test_comments_are_ignored_and_positions_are_tracked():
     assert tokens[-1] == Token(TokenType.EOF, "", 3, 24)
 
 
-def test_lexical_errors_are_accumulated_without_stopping():
+def test_lexical_errors_are_accumulated_without_stopping() -> None:
     source = 'int a = @;\n$ x = "oops\nint b = 2;'
 
     lexer = Lexer(source)
@@ -146,7 +146,7 @@ def test_lexical_errors_are_accumulated_without_stopping():
     assert tokens[-1] == Token(TokenType.EOF, "", 3, 11)
 
 
-def test_unterminated_block_comment_is_reported():
+def test_unterminated_block_comment_is_reported() -> None:
     lexer = Lexer("int a;\n/* never closed")
 
     tokens = lexer.tokenize()
@@ -156,16 +156,16 @@ def test_unterminated_block_comment_is_reported():
     assert tokens[-1] == Token(TokenType.EOF, "", 2, 16)
 
 
-def test_empty_source_produces_only_eof():
+def test_empty_source_produces_only_eof() -> None:
     assert tokenize("") == [Token(TokenType.EOF, "", 1, 1)]
 
 
-def test_eof_position_after_comment_only_source():
+def test_eof_position_after_comment_only_source() -> None:
     assert tokenize("// comment\n")[-1] == Token(TokenType.EOF, "", 2, 1)
 
 
-def test_tokens_are_immutable():
+def test_tokens_are_immutable() -> None:
     token = Token(TokenType.INT, "1", 1, 1)
 
     with pytest.raises(FrozenInstanceError):
-        token.value = "2"
+        token.value = "2"  # type: ignore[misc]

@@ -93,6 +93,8 @@ class Lexer:
 
         for match in TOKEN_PATTERN.finditer(self.source):
             group = match.lastgroup
+            if group is None:
+                continue
             value = match.group()
             line, column = self._position(match.start(), line_starts)
 

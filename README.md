@@ -1,5 +1,7 @@
 # mini_compiler
 
+[![CI](https://github.com/Arthuroxx/mini_compiler/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/Arthuroxx/mini_compiler/actions/workflows/ci.yml)
+
 A compiler simulator built in Python 3.10+ for the Compilers course.
 
 ## Structure

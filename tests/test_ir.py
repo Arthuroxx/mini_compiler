@@ -4,6 +4,7 @@ from dataclasses import FrozenInstanceError
 
 import pytest
 
+from mini_compiler.ast_nodes import Program
 from mini_compiler.ir import (
     TACGenerator,
     TACInstruction,
@@ -12,9 +13,10 @@ from mini_compiler.ir import (
 from mini_compiler.lexer import Lexer
 from mini_compiler.parser import Parser
 from mini_compiler.semantic import SemanticAnalyzer
+from mini_compiler.symbols import SemanticError
 
 
-def compile_source(source: str):
+def compile_source(source: str) -> tuple[Program, list[SemanticError]]:
     lexer = Lexer(source)
     tokens = lexer.tokenize()
     assert lexer.errors == []
@@ -30,7 +32,7 @@ def generate(source: str) -> list[TACInstruction]:
     return TACGenerator().generate(annotated, errors)
 
 
-def test_multiplication_respects_precedence():
+def test_multiplication_respects_precedence() -> None:
     instructions = generate(
         "int a = 1; int b = 2; int x = 0; x = a + b * 5;"
     )
@@ -42,7 +44,7 @@ def test_multiplication_respects_precedence():
     )
 
 
-def test_while_generates_labels_and_jumps():
+def test_while_generates_labels_and_jumps() -> None:
     instructions = generate(
         "int x = 3;\n"
         "while (x >= 0) {\n"
@@ -62,7 +64,7 @@ def test_while_generates_labels_and_jumps():
     )
 
 
-def test_if_else_generates_labels_and_jumps():
+def test_if_else_generates_labels_and_jumps() -> None:
     instructions = generate(
         "int x = 1;\n"
         "if (x <= 10) { x = 2; } else { x = 3; }"
@@ -80,7 +82,7 @@ def test_if_else_generates_labels_and_jumps():
     )
 
 
-def test_if_without_else_uses_a_single_label():
+def test_if_without_else_uses_a_single_label() -> None:
     instructions = generate("bool ok = true; if (ok) { ok = false; }")
 
     assert format_instructions(instructions) == (
@@ -91,7 +93,7 @@ def test_if_without_else_uses_a_single_label():
     )
 
 
-def test_int_to_float_cast_in_declaration():
+def test_int_to_float_cast_in_declaration() -> None:
     instructions = generate("float x = 1;")
 
     assert format_instructions(instructions) == (
@@ -100,7 +102,7 @@ def test_int_to_float_cast_in_declaration():
     )
 
 
-def test_int_to_float_cast_in_mixed_arithmetic():
+def test_int_to_float_cast_in_mixed_arithmetic() -> None:
     instructions = generate("float x = 1 + 2.5;")
 
     assert format_instructions(instructions) == (
@@ -110,7 +112,7 @@ def test_int_to_float_cast_in_mixed_arithmetic():
     )
 
 
-def test_int_to_float_cast_in_assignment():
+def test_int_to_float_cast_in_assignment() -> None:
     instructions = generate("float x = 1.0;\nx = 2;")
 
     assert format_instructions(instructions[-2:]) == (
@@ -119,7 +121,7 @@ def test_int_to_float_cast_in_assignment():
     )
 
 
-def test_int_to_float_cast_in_mixed_comparison():
+def test_int_to_float_cast_in_mixed_comparison() -> None:
     instructions = generate("int x = 1;\nbool ok = x <= 1.5;")
 
     assert format_instructions(instructions) == (
@@ -130,7 +132,7 @@ def test_int_to_float_cast_in_mixed_comparison():
     )
 
 
-def test_unary_operator_generation():
+def test_unary_operator_generation() -> None:
     instructions = generate("int a = 1;\nint x = -a;")
 
     assert format_instructions(instructions[-2:]) == (
@@ -139,7 +141,7 @@ def test_unary_operator_generation():
     )
 
 
-def test_bool_and_string_literals_are_formatted():
+def test_bool_and_string_literals_are_formatted() -> None:
     instructions = generate('bool ok = true;\nstring name = "hi";')
 
     assert format_instructions(instructions) == (
@@ -148,14 +150,14 @@ def test_bool_and_string_literals_are_formatted():
     )
 
 
-def test_no_code_is_generated_when_semantic_errors_exist():
+def test_no_code_is_generated_when_semantic_errors_exist() -> None:
     annotated, errors = compile_source("int x = missing;")
 
     assert errors != []
     assert TACGenerator().generate(annotated, errors) == []
 
 
-def test_formatter_handles_labels_jumps_casts_and_unary_ops():
+def test_formatter_handles_labels_jumps_casts_and_unary_ops() -> None:
     instructions = [
         TACInstruction("label", "L1"),
         TACInstruction("ifFalse", "L2", "t1"),
@@ -173,10 +175,10 @@ def test_formatter_handles_labels_jumps_casts_and_unary_ops():
     )
 
 
-def test_tac_instructions_are_immutable():
+def test_tac_instructions_are_immutable() -> None:
     instruction = TACInstruction("*", "t1", "b", "5")
 
     assert instruction.format() == "t1 = b * 5"
 
     with pytest.raises(FrozenInstanceError):
-        instruction.op = "+"
+        instruction.op = "+"  # type: ignore[misc]

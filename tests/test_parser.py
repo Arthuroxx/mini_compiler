@@ -1,6 +1,7 @@
 """Tests for the parser."""
 
 from dataclasses import FrozenInstanceError
+from typing import cast
 
 import pytest
 
@@ -28,7 +29,7 @@ def parse(source: str) -> tuple[Program, list[ParseError]]:
     return parser.parse(), parser.errors
 
 
-def test_multiplication_nests_under_addition():
+def test_multiplication_nests_under_addition() -> None:
     program, errors = parse("int x = a + b * 5;")
 
     assert errors == []
@@ -59,7 +60,7 @@ def test_multiplication_nests_under_addition():
     )
 
 
-def test_full_precedence_chain():
+def test_full_precedence_chain() -> None:
     program, errors = parse("int x = a || b && c == d <= e + f * g;")
 
     assert errors == []
@@ -93,7 +94,7 @@ def test_full_precedence_chain():
     assert multiplicative.right == Identifier("g", 1, 37)
 
 
-def test_unary_operators():
+def test_unary_operators() -> None:
     program, errors = parse("int x = !a && -b;")
 
     assert errors == []
@@ -108,7 +109,7 @@ def test_unary_operators():
     )
 
 
-def test_binary_operators_are_left_associative():
+def test_binary_operators_are_left_associative() -> None:
     program, errors = parse("int x = 1 - 2 - 3;")
 
     assert errors == []
@@ -123,7 +124,7 @@ def test_binary_operators_are_left_associative():
     )
 
 
-def test_if_else_and_while():
+def test_if_else_and_while() -> None:
     source = (
         "if (x <= 10) {\n"
         "    x = x + 1;\n"
@@ -178,26 +179,27 @@ def test_if_else_and_while():
     )
 
 
-def test_literal_values_are_converted():
+def test_literal_values_are_converted() -> None:
     program, errors = parse(
         'int a = 1; float b = 2.5; string c = "hi\\nthere";'
     )
 
     assert errors == []
-    declarations = program.statements
-    assert [declaration.value.value for declaration in declarations] == [
+    declarations = cast(tuple[VarDecl, ...], program.statements)
+    literals = [cast(Literal, declaration.value) for declaration in declarations]
+    assert [literal.value for literal in literals] == [
         1,
         2.5,
         "hi\nthere",
     ]
-    assert [type(declaration.value.value) for declaration in declarations] == [
+    assert [type(literal.value) for literal in literals] == [
         int,
         float,
         str,
     ]
 
 
-def test_bool_declarations_and_literals():
+def test_bool_declarations_and_literals() -> None:
     program, errors = parse("bool a = true; bool b = false;")
 
     assert errors == []
@@ -207,14 +209,14 @@ def test_bool_declarations_and_literals():
     )
 
 
-def test_reports_missing_identifier_with_position():
+def test_reports_missing_identifier_with_position() -> None:
     program, errors = parse("int = ;")
 
     assert program.statements == ()
     assert errors == [ParseError("Expected identifier, got '='", 1, 5)]
 
 
-def test_recovers_at_semicolon():
+def test_recovers_at_semicolon() -> None:
     program, errors = parse("int = ;\nint y = 2;")
 
     assert errors == [ParseError("Expected identifier, got '='", 1, 5)]
@@ -223,7 +225,7 @@ def test_recovers_at_semicolon():
     )
 
 
-def test_recovers_inside_a_block():
+def test_recovers_inside_a_block() -> None:
     program, errors = parse("if (x) { int = ; x = 1; }")
 
     assert errors == [ParseError("Expected identifier, got '='", 1, 14)]
@@ -237,7 +239,7 @@ def test_recovers_inside_a_block():
     )
 
 
-def test_accumulates_multiple_errors():
+def test_accumulates_multiple_errors() -> None:
     program, errors = parse("int = ;\nint y = ;")
 
     assert program.statements == ()
@@ -247,23 +249,24 @@ def test_accumulates_multiple_errors():
     ]
 
 
-def test_unexpected_top_level_token_recovers():
+def test_unexpected_top_level_token_recovers() -> None:
     program, errors = parse("}")
 
     assert program == Program((), 1, 1)
     assert errors == [ParseError("Unexpected token '}'", 1, 1)]
 
 
-def test_empty_program():
+def test_empty_program() -> None:
     program, errors = parse("")
 
     assert program == Program((), 1, 1)
     assert errors == []
 
 
-def test_ast_nodes_are_immutable():
+def test_ast_nodes_are_immutable() -> None:
     program, _ = parse("int x = 1;")
     declaration = program.statements[0]
+    assert isinstance(declaration, VarDecl)
 
     with pytest.raises(FrozenInstanceError):
-        declaration.name = "y"
+        declaration.name = "y"  # type: ignore[misc]

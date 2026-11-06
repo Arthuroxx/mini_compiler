@@ -20,7 +20,7 @@ def read_example(name: str) -> str:
     return (EXAMPLES_DIR / name).read_text(encoding="utf-8")
 
 
-def test_valid_example_completes_every_phase():
+def test_valid_example_completes_every_phase() -> None:
     result = compile_source(read_example("valid.mc"))
 
     assert result.failed_phase is None
@@ -31,7 +31,7 @@ def test_valid_example_completes_every_phase():
     assert result.tac
 
 
-def test_lexical_error_example_stops_after_lexing():
+def test_lexical_error_example_stops_after_lexing() -> None:
     result = compile_source(read_example("lexical_error.mc"))
 
     assert result.failed_phase == "lexical"
@@ -43,7 +43,7 @@ def test_lexical_error_example_stops_after_lexing():
     assert result.errors[0].column == 11
 
 
-def test_syntactic_error_example_stops_after_parsing():
+def test_syntactic_error_example_stops_after_parsing() -> None:
     result = compile_source(read_example("syntactic_error.mc"))
 
     assert result.failed_phase == "syntactic"
@@ -55,7 +55,7 @@ def test_syntactic_error_example_stops_after_parsing():
     assert result.errors[0].column == 9
 
 
-def test_semantic_error_example_stops_after_semantic_analysis():
+def test_semantic_error_example_stops_after_semantic_analysis() -> None:
     result = compile_source(read_example("semantic_error.mc"))
 
     assert result.failed_phase == "semantic"
@@ -66,7 +66,7 @@ def test_semantic_error_example_stops_after_semantic_analysis():
     assert result.errors[0].message == "Undefined variable 'missing'"
 
 
-def test_render_valid_result_includes_all_four_sections_in_order():
+def test_render_valid_result_includes_all_four_sections_in_order() -> None:
     output = render_result(compile_source(read_example("valid.mc")))
     headings = [
         "=== Tokens ===",
@@ -81,7 +81,7 @@ def test_render_valid_result_includes_all_four_sections_in_order():
     assert "=== Errors ===" not in output
 
 
-def test_render_stops_at_the_failing_phase():
+def test_render_stops_at_the_failing_phase() -> None:
     lexical = render_result(compile_source(read_example("lexical_error.mc")))
     syntactic = render_result(compile_source(read_example("syntactic_error.mc")))
     semantic = render_result(compile_source(read_example("semantic_error.mc")))
@@ -102,7 +102,9 @@ def test_render_stops_at_the_failing_phase():
     assert "=== TAC ===" not in semantic
 
 
-def test_cli_returns_exit_codes_for_each_example(capsys):
+def test_cli_returns_exit_codes_for_each_example(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     expectations = [
         ("valid.mc", 0),
         ("lexical_error.mc", 1),
@@ -116,7 +118,10 @@ def test_cli_returns_exit_codes_for_each_example(capsys):
         assert exit_code == expected_code
 
 
-def test_cli_reports_missing_file(tmp_path, capsys):
+def test_cli_reports_missing_file(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     exit_code = main([str(tmp_path / "missing.mc")])
 
     captured = capsys.readouterr()
@@ -156,7 +161,7 @@ def test_running_the_module_prints_the_expected_phase(
     name: str,
     expected_code: int,
     expected_section: str,
-):
+) -> None:
     result = _run_module(str(EXAMPLES_DIR / name))
 
     assert result.returncode == expected_code

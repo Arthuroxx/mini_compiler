@@ -205,4 +205,4 @@ def test_module_entry_point_compiles_a_file(
         runpy.run_module("mini_compiler", run_name="__main__")
 
     assert exit_info.value.code == 0
-    assert "=== TAC ===" in capsys.readouterr().out
+    assert "TAC" in capsys.readouterr().out

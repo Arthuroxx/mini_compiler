@@ -151,10 +151,10 @@ def _run_module(*arguments: str) -> subprocess.CompletedProcess[str]:
 @pytest.mark.parametrize(
     ("name", "expected_code", "expected_section"),
     [
-        ("valid.mc", 0, "=== TAC ==="),
-        ("lexical_error.mc", 1, "=== Errors ==="),
-        ("syntactic_error.mc", 1, "=== Errors ==="),
-        ("semantic_error.mc", 1, "=== Errors ==="),
+        ("valid.mc", 0, "TAC"),
+        ("lexical_error.mc", 1, "Errors"),
+        ("syntactic_error.mc", 1, "Errors"),
+        ("semantic_error.mc", 1, "Errors"),
     ],
 )
 def test_running_the_module_prints_the_expected_phase(

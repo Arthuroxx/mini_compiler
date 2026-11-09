@@ -24,22 +24,31 @@ from mini_compiler.ast_nodes import (
     VarDecl,
     While,
 )
+from mini_compiler.codegen import AsmInstruction
 from mini_compiler.compiler import CompilationResult
 from mini_compiler.ir import TACInstruction
 
-PHASE_CHOICES: Final[tuple[str, ...]] = ("tokens", "ast", "symbols", "tac", "all")
+PHASE_CHOICES: Final[tuple[str, ...]] = (
+    "tokens",
+    "ast",
+    "symbols",
+    "tac",
+    "asm",
+    "all",
+)
 
 _PHASE_TITLES: Final[dict[str, str]] = {
     "tokens": "Tokens",
     "ast": "AST",
     "symbols": "Symbols",
     "tac": "TAC",
+    "asm": "ASM",
 }
 _TITLE_STYLE = "bold cyan"
 _LABEL_STYLE = "bold yellow"
 _ERROR_STYLE = "red"
 _MUTED_STYLE = "dim"
-_LABEL_PATTERN = re.compile(r"\bL\d+\b")
+_LABEL_PATTERN = re.compile(r"\bL(?:cmp)?\d+\b")
 
 
 def render(
@@ -94,6 +103,7 @@ def _selected_phases(result: CompilationResult, phase: str) -> list[str]:
         phases.append("symbols")
     if result.failed_phase is None:
         phases.append("tac")
+        phases.append("asm")
     return phases
 
 
@@ -107,6 +117,8 @@ def _phase_renderable(
         return _ast_tree(result)
     if phase == "symbols":
         return _symbols_table(result)
+    if phase == "asm":
+        return _asm_text(result)
     return _tac_text(result)
 
 
@@ -267,8 +279,29 @@ def _tac_text(result: CompilationResult) -> Text:
     return text
 
 
+def _asm_text(result: CompilationResult) -> Text:
+    if result.failed_phase is not None:
+        return Text("<not generated>", style=_MUTED_STYLE)
+    if not result.asm:
+        return Text("<empty>", style=_MUTED_STYLE)
+
+    text = Text()
+    for index, instruction in enumerate(result.asm):
+        if index:
+            text.append("\n")
+        text.append_text(_asm_line(instruction))
+    return text
+
+
 def _tac_line(instruction: TACInstruction) -> Text:
-    line = instruction.format()
+    return _highlight_labels(instruction.format())
+
+
+def _asm_line(instruction: AsmInstruction) -> Text:
+    return _highlight_labels(instruction.format())
+
+
+def _highlight_labels(line: str) -> Text:
     if line.endswith(":"):
         return Text(line, style=_LABEL_STYLE)
 

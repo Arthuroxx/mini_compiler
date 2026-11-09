@@ -8,6 +8,16 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Target code generation from TAC with `MOV`, `ADD`, `SUB`, `MUL`, `DIV`,
+  `CMP`, `JMP`, `JZ`, comparison jumps, labels, `INT2FLOAT`, `STORE`, and
+  `LOAD`.
+- Liveness-based register allocation for `R0`-`R2` with stack spilling from
+  `0x2000`, demonstrated by `examples/spill.mc`.
+- `asm` phase in the CLI, `--phase`, `--plain`, and the Rich renderer, with
+  README and walkthrough documentation.
+
 ## [1.0.0] - 2026-11-07
 
 ### Added

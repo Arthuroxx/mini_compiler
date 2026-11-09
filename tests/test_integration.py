@@ -29,6 +29,7 @@ def test_valid_example_completes_every_phase() -> None:
     assert result.ast is not None
     assert result.symbol_table is not None
     assert result.tac
+    assert result.asm
 
 
 def test_lexical_error_example_stops_after_lexing() -> None:
@@ -39,6 +40,7 @@ def test_lexical_error_example_stops_after_lexing() -> None:
     assert result.ast is None
     assert result.symbol_table is None
     assert result.tac == ()
+    assert result.asm == ()
     assert result.errors[0].line == 2
     assert result.errors[0].column == 11
 
@@ -51,6 +53,7 @@ def test_syntactic_error_example_stops_after_parsing() -> None:
     assert result.ast is not None
     assert result.symbol_table is None
     assert result.tac == ()
+    assert result.asm == ()
     assert result.errors[0].line == 2
     assert result.errors[0].column == 9
 
@@ -63,16 +66,18 @@ def test_semantic_error_example_stops_after_semantic_analysis() -> None:
     assert result.ast is not None
     assert result.symbol_table is not None
     assert result.tac == ()
+    assert result.asm == ()
     assert result.errors[0].message == "Undefined variable 'missing'"
 
 
-def test_render_valid_result_includes_all_four_sections_in_order() -> None:
+def test_render_valid_result_includes_all_five_sections_in_order() -> None:
     output = render_result(compile_source(read_example("valid.mc")))
     headings = [
         "=== Tokens ===",
         "=== AST ===",
         "=== Symbol Table ===",
         "=== TAC ===",
+        "=== ASM ===",
     ]
 
     positions = [output.index(heading) for heading in headings]
@@ -91,15 +96,18 @@ def test_render_stops_at_the_failing_phase() -> None:
     assert "=== AST ===" not in lexical
     assert "=== Symbol Table ===" not in lexical
     assert "=== TAC ===" not in lexical
+    assert "=== ASM ===" not in lexical
 
     assert "=== AST ===" in syntactic
     assert "=== Errors ===" in syntactic
     assert "=== Symbol Table ===" not in syntactic
     assert "=== TAC ===" not in syntactic
+    assert "=== ASM ===" not in syntactic
 
     assert "=== Symbol Table ===" in semantic
     assert "=== Errors ===" in semantic
     assert "=== TAC ===" not in semantic
+    assert "=== ASM ===" not in semantic
 
 
 def test_cli_returns_exit_codes_for_each_example(
@@ -151,10 +159,10 @@ def _run_module(*arguments: str) -> subprocess.CompletedProcess[str]:
 @pytest.mark.parametrize(
     ("name", "expected_code", "expected_section"),
     [
-        ("valid.mc", 0, "=== TAC ==="),
-        ("lexical_error.mc", 1, "=== Errors ==="),
-        ("syntactic_error.mc", 1, "=== Errors ==="),
-        ("semantic_error.mc", 1, "=== Errors ==="),
+        ("valid.mc", 0, "ASM"),
+        ("lexical_error.mc", 1, "Errors"),
+        ("syntactic_error.mc", 1, "Errors"),
+        ("semantic_error.mc", 1, "Errors"),
     ],
 )
 def test_running_the_module_prints_the_expected_phase(

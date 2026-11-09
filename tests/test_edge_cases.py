@@ -60,12 +60,13 @@ def test_parenthesized_expressions_are_parsed() -> None:
 
 
 def test_cli_renders_empty_tokens_and_empty_tac() -> None:
-    result = CompilationResult((), None, None, (), (), None)
+    result = CompilationResult((), None, None, (), (), (), None)
 
     output = render_result(result)
 
     assert "=== Tokens ===\n<empty>" in output
     assert "=== TAC ===\n<empty>" in output
+    assert "=== ASM ===\n<empty>" in output
 
 
 def test_tac_instruction_without_arguments_is_plain_text() -> None:
@@ -205,4 +206,6 @@ def test_module_entry_point_compiles_a_file(
         runpy.run_module("mini_compiler", run_name="__main__")
 
     assert exit_info.value.code == 0
-    assert "=== TAC ===" in capsys.readouterr().out
+    output = capsys.readouterr().out
+    assert "TAC" in output
+    assert "ASM" in output

@@ -49,6 +49,9 @@ Semantic analyzer     mini_compiler.semantic.SemanticAnalyzer
 TAC generator         mini_compiler.ir.TACGenerator
     | instructions
     v
+Assembly generator    mini_compiler.codegen.AssemblyGenerator
+    | R0-R2 + stack spill
+    v
 CLI / orchestration   mini_compiler.compiler.compile_source
                       mini_compiler.cli.main
 ```
@@ -64,6 +67,7 @@ The pipeline stops at the first phase that reports errors.
 | Symbol table | Tracks declarations, nested scopes, shadowing, redeclarations, and unresolved names. | `mini_compiler.symbols.SymbolTable` |
 | Semantic analysis | Type-checks declarations, assignments, conditions, and operators, and annotates expressions with their result types. | `mini_compiler.semantic.SemanticAnalyzer` |
 | Three-address code | Generates TAC for assignments, arithmetic, comparisons, `if`/`else`, `while`, and `int`-to-`float` casts. | `mini_compiler.ir.TACGenerator` |
+| Target code | Lowers TAC to assembly (`MOV`, `ADD`, `SUB`, `MUL`, `DIV`, `CMP`, `JMP`, `JZ`, `INT2FLOAT`), allocates `R0`-`R2` with liveness, and spills live temporaries to `0x2000` with `STORE`/`LOAD`. | `mini_compiler.codegen.AssemblyGenerator` |
 
 ## Usage
 
@@ -74,10 +78,10 @@ python -m mini_compiler examples/valid.mc
 ```
 
 By default the command prints the tokens in a table, the annotated AST as a
-tree, the symbol table, errors in red when present, and the generated
-three-address code with highlighted labels. It exits with `0` on success, `1`
-when a compiler phase reports errors, and `2` when the input file cannot be
-read.
+tree, the symbol table, errors in red when present, the generated
+three-address code, and the target assembly with highlighted labels. It exits
+with `0` on success, `1` when a compiler phase reports errors, and `2` when the
+input file cannot be read.
 
 Use `--phase` to render a single phase, or `--plain` to keep the original
 plain-text output:
@@ -87,17 +91,20 @@ python -m mini_compiler examples/walkthrough.mc --phase tokens
 python -m mini_compiler examples/walkthrough.mc --phase ast
 python -m mini_compiler examples/walkthrough.mc --phase symbols
 python -m mini_compiler examples/walkthrough.mc --phase tac
+python -m mini_compiler examples/walkthrough.mc --phase asm
 python -m mini_compiler examples/walkthrough.mc --plain
 ```
 
-`--phase` accepts `tokens`, `ast`, `symbols`, `tac`, or `all` (the default).
+`--phase` accepts `tokens`, `ast`, `symbols`, `tac`, `asm`, or `all` (the
+default).
 
 ### Sample programs
 
 | Program | Stops after | Exit code |
 | --- | --- | --- |
-| `examples/valid.mc` | TAC generation | `0` |
-| `examples/walkthrough.mc` | TAC generation | `0` |
+| `examples/valid.mc` | Target code generation | `0` |
+| `examples/walkthrough.mc` | Target code generation | `0` |
+| `examples/spill.mc` | Target code generation (spill) | `0` |
 | `examples/lexical_error.mc` | Lexical analysis | `1` |
 | `examples/syntactic_error.mc` | Parsing | `1` |
 | `examples/semantic_error.mc` | Semantic analysis | `1` |
@@ -106,10 +113,11 @@ python -m mini_compiler examples/walkthrough.mc --plain
 ### Rich output
 
 The default renderer prints a section title per phase, tokens in a three-column
-table, the AST as a tree of nodes and operators, the symbol table, and TAC with
-highlighted labels. Abridged output for `examples/walkthrough.mc` (the token
-table is shortened with `...`; the AST, symbol table, and TAC are complete;
-Rich draws Unicode box characters in terminals that support them):
+table, the AST as a tree of nodes and operators, the symbol table, TAC with
+highlighted labels, and the target assembly. Abridged output for
+`examples/walkthrough.mc` (the token table is shortened with `...`; the AST,
+symbol table, TAC, and ASM are complete; Rich draws Unicode box characters in
+terminals that support them):
 
 ```text
 Tokens
@@ -176,7 +184,48 @@ t7 = x - 1
 x = t7
 goto L2
 L3:
+
+ASM
+MOV [a], 2
+MOV [b], 3
+MOV R0, [b]
+MUL R0, 5
+MOV R1, [a]
+ADD R1, R0
+MOV [x], R1
+INT2FLOAT R0, [x]
+MOV [ratio], R0
+MOV R0, [x]
+CMP R0, 10
+MOV R0, 1
+JGE Lcmp1
+MOV R0, 0
+Lcmp1:
+CMP R0, 0
+JZ L1
+MOV R0, [ratio]
+ADD R0, 1.5
+MOV [ratio], R0
+L1:
+L2:
+MOV R0, [x]
+CMP R0, 0
+MOV R0, 1
+JGE Lcmp2
+MOV R0, 0
+Lcmp2:
+CMP R0, 0
+JZ L3
+MOV R0, [x]
+SUB R0, 1
+MOV [x], R0
+JMP L2
+L3:
 ```
+
+Temporaries are assigned to `R0`-`R2`. When a fourth temporary is live, the
+allocator stores one with `STORE` and restores it with `LOAD` from the stack
+starting at `0x2000`; `examples/spill.mc` demonstrates this.
 
 Errors are printed in red after the phases that ran successfully. Output for
 `examples/lexical_error.mc`:
@@ -234,6 +283,13 @@ b = 3
 t1 = b * 5
 t2 = a + t1
 x = t2
+...
+
+=== ASM ===
+MOV [a], 2
+MOV [b], 3
+MOV R0, [b]
+MUL R0, 5
 ...
 ```
 

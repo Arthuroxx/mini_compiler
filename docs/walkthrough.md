@@ -38,7 +38,7 @@ python -m mini_compiler examples/walkthrough.mc
 ```
 
 The process exits with code `0` because every phase completes. The default
-run prints the four sections shown below in a single pass; each section can
+run prints the five sections shown below in a single pass; each section can
 also be rendered on its own with `--phase`.
 
 ## 1. Lexical analysis
@@ -216,6 +216,94 @@ x = t7
 goto L2
 L3:
 ```
+
+## 6. Target code
+
+After TAC generation, `AssemblyGenerator` lowers the instructions to a small
+assembly language. Variables live in memory (`[name]`), temporaries are held in
+`R0`-`R2`, comparisons materialize `0`/`1`, and labels are highlighted in the
+terminal.
+
+```bash
+python -m mini_compiler examples/walkthrough.mc --phase asm
+```
+
+```text
+ASM
+MOV [a], 2
+MOV [b], 3
+MOV R0, [b]
+MUL R0, 5
+MOV R1, [a]
+ADD R1, R0
+MOV [x], R1
+INT2FLOAT R0, [x]
+MOV [ratio], R0
+MOV R0, [x]
+CMP R0, 10
+MOV R0, 1
+JGE Lcmp1
+MOV R0, 0
+Lcmp1:
+CMP R0, 0
+JZ L1
+MOV R0, [ratio]
+ADD R0, 1.5
+MOV [ratio], R0
+L1:
+L2:
+MOV R0, [x]
+CMP R0, 0
+MOV R0, 1
+JGE Lcmp2
+MOV R0, 0
+Lcmp2:
+CMP R0, 0
+JZ L3
+MOV R0, [x]
+SUB R0, 1
+MOV [x], R0
+JMP L2
+L3:
+```
+
+The allocator computes liveness for every temporary. When a fourth temporary is
+live at the same time, one is spilled to the stack starting at `0x2000`:
+
+```bash
+python -m mini_compiler examples/spill.mc --phase asm
+```
+
+```text
+ASM
+MOV [a], 1
+MOV [b], 2
+MOV [c], 3
+MOV [d], 4
+MOV [e], 5
+MOV [f], 6
+MOV [g], 7
+MOV [h], 8
+MOV R0, [a]
+ADD R0, [b]
+MOV R1, [c]
+ADD R1, [d]
+MOV R2, [e]
+ADD R2, [f]
+STORE R0, [0x2000]
+MOV R0, [g]
+ADD R0, [h]
+ADD R2, R0
+MOV R0, R1
+ADD R0, R2
+LOAD R1, [0x2000]
+MOV R2, R1
+ADD R2, R0
+MOV [x], R2
+```
+
+`examples/spill.mc` keeps four temporaries alive at once, so `STORE R0,
+[0x2000]` frees a register and `LOAD R1, [0x2000]` restores it later.
 
 ## Error examples
 
@@ -401,23 +489,24 @@ Errors
 The analyzer reports `1:9: Operator '*' requires numeric operands, got
 'string' and 'int'` and marks the expression type as `error`.
 
-### TAC after an earlier error
+### Target code after an earlier error
 
-The TAC generator has no diagnostics of its own. It is invoked only after
-semantic analysis succeeds, and it returns no instructions when semantic
-errors are passed to it. This can be observed through the compiler API:
+The TAC and assembly generators have no diagnostics of their own. They run only
+after semantic analysis succeeds, so no instructions are emitted when an
+earlier phase fails. This can be observed through the compiler API:
 
 ```bash
-python -c "from pathlib import Path; from mini_compiler.compiler import compile_source; result = compile_source(Path('examples/type_error.mc').read_text(encoding='utf-8')); print('failed_phase:', result.failed_phase); print('tac:', result.tac)"
+python -c "from pathlib import Path; from mini_compiler.compiler import compile_source; result = compile_source(Path('examples/type_error.mc').read_text(encoding='utf-8')); print('failed_phase:', result.failed_phase); print('tac:', result.tac); print('asm:', result.asm)"
 ```
 
 ```text
 failed_phase: semantic
 tac: ()
+asm: ()
 ```
 
-The pipeline stops before code generation, so no TAC is emitted for this
-program.
+The pipeline stops before code generation, so neither TAC nor assembly is
+emitted for this program.
 
 ## Plain output
 
@@ -456,5 +545,10 @@ global:
 === TAC ===
 a = 2
 b = 3
+...
+
+=== ASM ===
+MOV [a], 2
+MOV [b], 3
 ...
 ```

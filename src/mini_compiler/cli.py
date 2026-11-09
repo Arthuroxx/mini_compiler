@@ -56,6 +56,12 @@ def render_result(result: CompilationResult) -> str:
         else:
             lines.append("<empty>")
 
+        lines.extend(["", "=== ASM ==="])
+        if result.asm:
+            lines.extend(instruction.format() for instruction in result.asm)
+        else:
+            lines.append("<empty>")
+
     return "\n".join(lines)
 
 

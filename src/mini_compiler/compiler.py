@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from mini_compiler.ast_nodes import Program
+from mini_compiler.codegen import AsmInstruction, AssemblyGenerator
 from mini_compiler.ir import TACGenerator, TACInstruction
 from mini_compiler.lexer import Lexer, LexicalError, Token
 from mini_compiler.parser import ParseError, Parser
@@ -22,6 +23,7 @@ class CompilationResult:
     ast: Program | None
     symbol_table: SymbolTable | None
     tac: tuple[TACInstruction, ...]
+    asm: tuple[AsmInstruction, ...]
     errors: tuple[CompilationError, ...]
     failed_phase: str | None
 
@@ -37,6 +39,7 @@ def compile_source(source: str) -> CompilationResult:
             None,
             None,
             (),
+            (),
             tuple(lexer.errors),
             "lexical",
         )
@@ -48,6 +51,7 @@ def compile_source(source: str) -> CompilationResult:
             tokens,
             program,
             None,
+            (),
             (),
             tuple(parser.errors),
             "syntactic",
@@ -61,16 +65,19 @@ def compile_source(source: str) -> CompilationResult:
             annotated,
             analyzer.symbol_table,
             (),
+            (),
             tuple(semantic_errors),
             "semantic",
         )
 
     tac = tuple(TACGenerator().generate(annotated, semantic_errors))
+    asm = tuple(AssemblyGenerator().generate(tac))
     return CompilationResult(
         tokens,
         annotated,
         analyzer.symbol_table,
         tac,
+        asm,
         (),
         None,
     )

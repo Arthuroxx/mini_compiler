@@ -46,7 +46,7 @@ def render_text(
 
 
 def title_lines(output: str) -> list[str]:
-    titles = {"Tokens", "AST", "Symbols", "TAC", "Errors"}
+    titles = {"Tokens", "AST", "Symbols", "TAC", "ASM", "Errors"}
     return [line for line in output.splitlines() if line in titles]
 
 
@@ -55,7 +55,7 @@ def test_rich_render_prints_every_phase_title() -> None:
 
     output = render_text(result)
 
-    assert title_lines(output) == ["Tokens", "AST", "Symbols", "TAC"]
+    assert title_lines(output) == ["Tokens", "AST", "Symbols", "TAC", "ASM"]
     assert "=== Tokens ===" not in output
 
 
@@ -66,6 +66,7 @@ def test_rich_render_prints_every_phase_title() -> None:
         ("ast", "AST"),
         ("symbols", "Symbols"),
         ("tac", "TAC"),
+        ("asm", "ASM"),
     ],
 )
 def test_phase_option_limits_output(phase: str, expected: str) -> None:
@@ -212,6 +213,25 @@ def test_tac_phase_reports_not_generated_after_failure() -> None:
     assert "<not generated>" in output
 
 
+def test_asm_phase_highlights_labels() -> None:
+    result = compile_source(read_example("walkthrough.mc"))
+
+    output = render_text(result, "asm", color=True)
+
+    assert "JMP" in output
+    assert "L2" in output
+    assert "L1:" in output
+    assert "\x1b[1;33m" in output
+
+
+def test_asm_phase_reports_not_generated_after_failure() -> None:
+    result = compile_source(read_example("lexical_error.mc"))
+
+    output = render_text(result, "asm")
+
+    assert "<not generated>" in output
+
+
 def test_errors_are_red() -> None:
     result = compile_source(read_example("lexical_error.mc"))
 
@@ -239,12 +259,13 @@ def test_ast_phase_reports_unavailable_after_lexical_error() -> None:
 
 
 def test_empty_result_renders_placeholders() -> None:
-    result = CompilationResult((), None, None, (), (), None)
+    result = CompilationResult((), None, None, (), (), (), None)
 
     assert "<empty>" in render_text(result, "tokens")
     assert "<unavailable>" in render_text(result, "ast")
     assert "<unavailable>" in render_text(result, "symbols")
     assert "<empty>" in render_text(result, "tac")
+    assert "<empty>" in render_text(result, "asm")
 
 
 def test_empty_program_renders_empty_symbol_table_and_tac() -> None:

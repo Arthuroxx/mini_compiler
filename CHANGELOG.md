@@ -8,8 +8,15 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-08
+
 ### Added
 
+- Rich terminal renderer that prints tokens as a table, the annotated AST as a
+  tree, the symbol table, TAC with highlighted labels, and target assembly.
+- `--phase` to render a single phase (`tokens`, `ast`, `symbols`, `tac`,
+  `asm`, or `all`) and `--plain` to keep the original plain-text output.
+- `rich>=15.0,<16` as a runtime dependency.
 - Target code generation from TAC with `MOV`, `ADD`, `SUB`, `MUL`, `DIV`,
   `CMP`, `JMP`, `JZ`, comparison jumps, labels, `INT2FLOAT`, `STORE`, and
   `LOAD`.
@@ -17,6 +24,12 @@ and this project adheres to
   `0x2000`, demonstrated by `examples/spill.mc`.
 - `asm` phase in the CLI, `--phase`, `--plain`, and the Rich renderer, with
   README and walkthrough documentation.
+
+### Changed
+
+- The default CLI output now uses the Rich renderer; the plain format remains
+  available through `--plain`.
+- The walkthrough documents the assembly phase and the spill behavior.
 
 ## [1.0.0] - 2026-11-07
 
@@ -62,6 +75,7 @@ and this project adheres to
 - Test suite covering the lexer, parser, symbol table, semantic analyzer,
   intermediate representation, and integration behavior.
 
-[Unreleased]: https://github.com/Arthuroxx/mini_compiler/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/Arthuroxx/mini_compiler/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/Arthuroxx/mini_compiler/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/Arthuroxx/mini_compiler/compare/v0.1.0...v1.0.0
 [0.1.0]: https://github.com/Arthuroxx/mini_compiler/releases/tag/v0.1.0

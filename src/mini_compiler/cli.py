@@ -14,6 +14,8 @@ from mini_compiler.compiler import (
     compile_source,
 )
 from mini_compiler.lexer import Token
+from mini_compiler.render import PHASE_CHOICES
+from mini_compiler.render import render as render_rich
 
 
 def render_result(result: CompilationResult) -> str:
@@ -69,7 +71,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 2
 
     result = compile_source(source)
-    print(render_result(result))
+    if args.plain:
+        print(render_result(result))
+    else:
+        render_rich(result, args.phase)
     return 0 if result.failed_phase is None else 1
 
 
@@ -87,4 +92,15 @@ def _build_argument_parser() -> argparse.ArgumentParser:
         description="Compile a mini_compiler source file and print each phase.",
     )
     parser.add_argument("path", type=Path, help="path to a .mc source file")
+    parser.add_argument(
+        "--phase",
+        choices=PHASE_CHOICES,
+        default="all",
+        help="phase to render (default: all)",
+    )
+    parser.add_argument(
+        "--plain",
+        action="store_true",
+        help="print the original plain-text output",
+    )
     return parser
